@@ -1,0 +1,42 @@
+import time
+from pyspark.sql import SparkSession
+from pyspark.mllib.clustering import KMeans
+from numpy import array
+from math import sqrt
+
+# Mulai penghitungan waktu
+start_time = time.time()
+
+# Inisialisasi Spark
+spark = SparkSession.builder \
+    .appName("KMeansExample") \
+    .getOrCreate()
+sc = spark.sparkContext
+
+# Path ke file hasil generate dataset
+file_path = "/data/kmeans_large.txt"
+
+# Membaca dan mem-parsing data
+data = sc.textFile(file_path)
+parsedData = data.map(lambda line: array([float(x) for x in line.split(' ')]))
+
+# Membangun model (klastering data)
+clusters = KMeans.train(parsedData, k=3, maxIterations=10, initializationMode="random")
+
+# Fungsi untuk menghitung error (tidak akan ditampilkan, hanya dijalankan untuk evaluasi)
+def error(point):
+    center = clusters.centers[clusters.predict(point)]
+    return sqrt(sum([x**2 for x in (point - center)]))
+
+# Menghitung Within Set Sum of Squared Errors (tidak akan ditampilkan)
+WSSSE = parsedData.map(lambda point: error(point)).reduce(lambda x, y: x + y)
+
+# Menghitung dan menampilkan waktu eksekusi
+end_time = time.time()
+execution_time = end_time - start_time
+print(f"Execution Time: {execution_time:.2f} seconds")
+
+# Stop Spark
+spark.stop()
+
+ 
