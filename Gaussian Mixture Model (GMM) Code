@@ -1,0 +1,31 @@
+from pyspark import SparkContext
+from pyspark.mllib.clustering import GaussianMixture
+from numpy import array
+import time
+
+# Inisialisasi SparkContext
+sc = SparkContext(appName="GMM_RDD_Execution_Time")
+
+# Path ke file dataset
+file_path = "/data/gmm_data_large.txt"
+
+# Load dan parsing data menjadi RDD
+data = sc.textFile(file_path)
+parsedData = data.map(lambda line: array([float(x) for x in line.strip().split(' ')]))
+
+# Waktu mulai eksekusi
+start_time = time.time()
+
+# Bangun model GMM dengan 2 cluster
+num_clusters = 2
+gmm = GaussianMixture.train(parsedData, num_clusters)
+
+# Waktu selesai eksekusi
+end_time = time.time()
+
+# Menampilkan waktu eksekusi
+execution_time = end_time - start_time
+print(f"Execution Time: {execution_time:.4f} seconds")
+
+# Stop SparkContext
+sc.stop()
